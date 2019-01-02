@@ -24,32 +24,30 @@
  *
  * @package    course/format
  * @subpackage topcoll
- * @category   event
  * @version    See the value of '$plugin->version' in version.php.
- * @copyright  &copy; 2017-onwards G J Barnard based upon work done by Marina Glancy.
+ * @copyright  &copy; 2018-onwards G J Barnard in respect to modifications of core code.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
  * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace format_topcoll\output;
 
-/**
- * Event observers supported by this format.
- */
-class format_topcoll_observer {
-
+class course_module_name extends \core_course\output\course_module_name {
     /**
-     * Observer for the event course_content_deleted.
+     * Export this data so it can be used as the context for a mustache template (core/inplace_editable).
      *
-     * Deletes the user preference entries for the given course upon course deletion.
-     * CONTRIB-3520.
-     *
-     * @param \core\event\course_content_deleted $event
+     * @param renderer_base $output typically, the renderer that's calling this function
+     * @return array data context for a mustache template
      */
-    public static function course_content_deleted(\core\event\course_content_deleted $event) {
-        global $DB;
-        $DB->delete_records("user_preferences", array("name" => 'topcoll_toggle_'.$event->objectid)); // This is the $courseid.
+    public function export_for_template(\renderer_base $output) {
+        global $PAGE;
+        $courserenderer = $PAGE->get_renderer('format_topcoll', 'course'); // Use our renderer instead.
+        $this->displayvalue = $courserenderer->course_section_cm_name_title($this->cm, $this->displayoptions);
+        if (strval($this->displayvalue) === '') {
+            $this->editable = false;
+        }
+        return parent::export_for_template($output);
     }
 }
